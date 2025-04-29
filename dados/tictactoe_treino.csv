@@ -1,3 +1,4 @@
+topLeft,topMid,topRight,midLeft,midMid,midRight,botLeft,botMid,botRight,class
 o,x,x,b,x,o,b,x,o,Jogador X venceu
 b,x,x,b,x,o,x,o,o,Jogador X venceu
 o,x,o,o,b,x,x,o,o,Tem jogo
