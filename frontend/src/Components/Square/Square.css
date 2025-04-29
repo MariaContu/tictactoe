@@ -1,0 +1,23 @@
+.square-container {
+    width: 100px;
+    height: 100px;
+    background-color: #3a4747;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+.square-container:hover {
+    background-color: #5f7676;
+    
+}
+
+.square-text {
+    color: #ffffff;
+    font-size: 50px;
+    font-weight: bold;
+    opacity: 1; 
+}

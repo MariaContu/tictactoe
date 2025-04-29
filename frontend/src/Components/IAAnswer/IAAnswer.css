@@ -1,0 +1,22 @@
+.ia-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin: 10px;
+}
+
+.answer-container {
+    background-color: rgba(0, 90, 81, 0.9);
+    padding: 10px 15px;
+    border-radius: 15px 15px 15px 0px;
+    text-align: center;
+    width: fit-content;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ia-content {
+    font-family: 'Baloo', sans-serif;
+    font-size: 24px;
+    color: white;
+}
