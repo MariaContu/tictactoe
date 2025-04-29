@@ -1,3 +1,4 @@
+topLeft,topMid,topRight,midLeft,midMid,midRight,botLeft,botMid,botRight,class
 x,x,o,o,o,x,x,x,o,Empate
 x,o,x,x,x,o,o,x,o,Empate
 b,o,o,b,x,o,x,x,x,Jogador X venceu
