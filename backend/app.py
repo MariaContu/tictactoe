@@ -34,6 +34,14 @@ modelo_knn = joblib.load('modelo_knn.pkl')
 # Carrega o modelo de MLP treinado e salvo com joblib
 modelo_mlp = joblib.load('modelo_mlp.pkl')
 
+# Carrega o modelo de xgb treinado e salvo com joblib
+modelo_xgb = joblib.load('modelo_xgb.pkl')
+
+modelo_rf = joblib.load('modelo_rf.pkl')
+
+
+
+
 # Carrega o encoder (LabelEncoder) usado no KNN para converter rótulos (ex: "Empate" → 0)
 encoder = joblib.load('encoder.pkl')
 
@@ -43,6 +51,14 @@ encoder = joblib.load('encoder.pkl')
 # Converte o formato do tabuleiro enviado pelo frontend (ex: 'x', 'o', 'b') para números
 # Isso é necessário para os modelos conseguirem entender a entrada
 symbol_map = {'x': 1, 'o': -1, 'b': 0}
+
+class_mapping = {
+    0: 'Empate',
+    1: 'Jogador O venceu',
+    2: 'Jogador X venceu',
+    3: 'Tem jogo'
+}
+
 
 # -----------------------------
 # FUNÇÃO DE PREVISÃO USADA PELOS DOIS MODELOS
@@ -59,6 +75,7 @@ def prever_modelo(modelo, is_knn=False):
 
         # Mapeia as letras ('x', 'o', 'b') para números (1, -1, 0)
         entrada = [symbol_map.get(v, 0) for v in tabuleiro]
+        
 
         # Se o modelo for KNN, a entrada é um array NumPy simples
         if is_knn:
@@ -71,6 +88,8 @@ def prever_modelo(modelo, is_knn=False):
                 'midLeft', 'midMid', 'midRight',
                 'botLeft', 'botMid', 'botRight'
             ])
+            print("DataFrame recebido pela IA:\n", entrada)
+
 
         # Faz a previsão com o modelo
         pred = modelo.predict(entrada)
@@ -103,6 +122,52 @@ def prever_knn():
 @app.route('/prevermlp', methods=['POST'])
 def prever_mlp():
     return prever_modelo(modelo_mlp)
+
+@app.route('/preverxgb', methods=['POST'])
+def prever_xgb():
+    try:
+        data = request.get_json()
+        tabuleiro = data.get('tabuleiro', [])
+        entrada = [symbol_map.get(v, 0) for v in tabuleiro]
+
+        entrada = np.array(entrada).reshape(1, -1)
+
+        pred = modelo_xgb.predict(entrada)
+        classe = int(pred[0])  # converte para int no caso de numpy.int64
+
+        label = class_mapping.get(classe, "Classe desconhecida")
+
+        response = jsonify({'resultado': label})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+
+    except Exception as e:
+        response = jsonify({'erro': str(e)})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response, 500
+    
+@app.route('/preverrf', methods=['POST'])
+def prever_rf():
+    try:
+        data = request.get_json()
+        tabuleiro = data.get('tabuleiro', [])
+        entrada = [symbol_map.get(v, 0) for v in tabuleiro]
+
+        entrada = np.array(entrada).reshape(1, -1)
+
+        pred = modelo_rf.predict(entrada)
+        label = str(pred[0])  # já está em string ('Empate', etc.)
+
+        response = jsonify({'resultado': label})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+
+    except Exception as e:
+        response = jsonify({'erro': str(e)})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response, 500
+
+
 
 # -----------------------------
 # INICIALIZAÇÃO DO SERVIDOR

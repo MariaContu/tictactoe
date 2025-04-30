@@ -28,56 +28,59 @@ function App() {
     newBoard[index] = 'X';
     setBoard(newBoard);
     setIsXTurn(false);
-
-    setIaAnswer('Tem jogo');
   };
+
+  const consultarIA = (tabuleiroAtual) => {
+    const payload = {
+      tabuleiro: tabuleiroAtual.map(v => v ? v.toLowerCase() : 'b')
+    };
+  
+    console.log("Payload enviado para IA:", payload.tabuleiro);
+  
+    fetch(`http://localhost:5001/prever${modeloIA}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json())
+      .then(data => {
+        setIaAnswer(data.resultado);
+        if (data.resultado !== "Tem jogo") {
+          setGameOver(true);
+        }
+      })
+      .catch(err => {
+        console.error("Erro ao chamar a IA:", err);
+        setIaAnswer("Erro ao consultar IA");
+      });
+  };
+  
 
 
   useEffect(() => {
+    if (gameOver) return;
+
+    // Sempre que o tabuleiro mudar, consultar a IA
+    consultarIA(board);
+
+    // Se for a vez da IA (O), jogar
     if (!isXTurn && !gameOver) {
       const emptyIndices = board
         .map((value, index) => value === null ? index : null)
         .filter((v) => v !== null);
-  
-      if (emptyIndices.length > 0) {
+
+      if (emptyIndices.length > 0 ) {
         const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         const newBoard = [...board];
         newBoard[randomIndex] = 'O';
-  
+
         setTimeout(() => {
           setBoard(newBoard);
           setIsXTurn(true);
-  
-          // Chamada para a IA Flask
-          const payload = {
-            tabuleiro: newBoard.map(v => v ? v.toLowerCase() : 'b') // 'X' -> 'x', null -> 'b'
-          };
-  
-          fetch(`http://localhost:5001/prever${modeloIA}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          })
-          
-
-
-            .then(res => res.json())
-            .then(data => {
-              setIaAnswer(data.resultado);
-              if (data.resultado !== "Tem jogo") {
-                setGameOver(true);
-              }
-            })
-            .catch(err => {
-              console.error("Erro ao chamar a IA:", err);
-              setIaAnswer("Erro ao consultar IA");
-            });
-  
         }, 500);
       }
     }
-  }, [isXTurn, board, gameOver]);
-  
+  }, [board, isXTurn, gameOver, modeloIA]);
 
   return (
     <>
@@ -86,6 +89,8 @@ function App() {
   <select id="modelo" value={modeloIA} onChange={e => setModeloIA(e.target.value)}>
     <option value="knn">KNN</option>
     <option value="mlp">MLP</option>
+    <option value="xgb">XGBoost</option>
+    <option value="rf">Random Forest</option>
   </select>
 </div>
 
@@ -93,7 +98,8 @@ function App() {
       <IAAnswer iaAnswer={iaAnswer} />
       <div className="board">
         {board.map((value, index) => (
-          <Square key={index} value={value} onClick={() => handleClick(index)} />
+          <Square key={index} value={value} onClick={() => handleClick(index)} index={index} />
+
         ))}
       </div>
       <NewGame onClick={handleNewGame} />
