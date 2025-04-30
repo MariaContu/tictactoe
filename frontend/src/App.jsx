@@ -9,6 +9,8 @@ function App() {
   const [isXTurn, setIsXTurn] = useState(true);
   const [iaAnswer, setIaAnswer] = useState('Tem jogo');
   const [gameOver, setGameOver] = useState(false);
+  const [modeloIA, setModeloIA] = useState('knn'); 
+
 
 
   const handleNewGame = () => {
@@ -51,13 +53,12 @@ function App() {
             tabuleiro: newBoard.map(v => v ? v.toLowerCase() : 'b') // 'X' -> 'x', null -> 'b'
           };
   
-          fetch('http://localhost:5001/preverknn', {
+          fetch(`http://localhost:5001/prever${modeloIA}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })
+          
 
 
             .then(res => res.json())
@@ -80,6 +81,14 @@ function App() {
 
   return (
     <>
+    <div style={{ marginBottom: '10px' }}>
+  <label htmlFor="modelo">Modelo IA:&nbsp;</label>
+  <select id="modelo" value={modeloIA} onChange={e => setModeloIA(e.target.value)}>
+    <option value="knn">KNN</option>
+    <option value="mlp">MLP</option>
+  </select>
+</div>
+
       <h3>Tic Tac Toe</h3>
       <IAAnswer iaAnswer={iaAnswer} />
       <div className="board">
