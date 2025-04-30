@@ -10,6 +10,19 @@
     transition: background-color 0.3s, opacity 0.3s;
 }
 
+.square {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;               /* Para centralizar conteúdo */
+    align-items: center;         /* Alinha verticalmente */
+    justify-content: center;     /* Alinha horizontalmente */
+    border: 2px solid #333;
+    background-color: #f0f0f0;
+  }
+
 .square-container:hover {
     background-color: #5f7676;
     

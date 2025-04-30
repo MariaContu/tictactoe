@@ -1,114 +1,100 @@
-import './App.css';
-import Square from "./Components/Square";
-import IAAnswer from './Components/IAAnswer';
-import NewGame from './Components/NewGame';
 import { useState, useEffect } from 'react';
+import Board from './components/Board';
+import Dropdown from './components/Dropdown';
+
+const initialBoard = Array(9).fill(null);
 
 function App() {
-  const [board, setBoard] = useState(Array(9).fill(null));
+  const [board, setBoard] = useState(initialBoard);
   const [isXTurn, setIsXTurn] = useState(true);
-  const [iaAnswer, setIaAnswer] = useState('Tem jogo');
   const [gameOver, setGameOver] = useState(false);
-  const [modeloIA, setModeloIA] = useState('knn'); 
+  const [message, setMessage] = useState('Seu turno!');
+  const [modelo, setModelo] = useState('knn');
 
-
-
-  const handleNewGame = () => {
-    setBoard(Array(9).fill(null));
-    setIsXTurn(true);
-    setIaAnswer('Tem jogo');
-    setGameOver(false);
-  };
-
-
-  const handleClick = (index) => {
-    if (board[index] || gameOver) return; 
+  const handleClick = async (index) => {
+    if (board[index] || gameOver || !isXTurn) return;
 
     const newBoard = [...board];
     newBoard[index] = 'X';
     setBoard(newBoard);
     setIsXTurn(false);
+
+    await verificarEstadoDoJogo(newBoard);
   };
 
-  const consultarIA = (tabuleiroAtual) => {
-    const payload = {
-      tabuleiro: tabuleiroAtual.map(v => v ? v.toLowerCase() : 'b')
-    };
-  
-    console.log("Payload enviado para IA:", payload.tabuleiro);
-  
-    fetch(`http://localhost:5001/prever${modeloIA}`, {
+  const verificarEstadoDoJogo = async (boardAtual) => {
+    try {
+      const response = await fetch(`http://localhost:5001/prever${modelo}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tabuleiro: boardAtual.map(v => v ? v.toLowerCase() : 'b')
+        })
+      });
+
+      const data = await response.json();
+      const resultado = data.resultado;
+
+      if (resultado === 'Tem jogo') {
+        setTimeout(() => iaJoga(boardAtual), 500);
+      } else {
+        setMessage(resultado);
+        setGameOver(true);
+      }
+    } catch (err) {
+      console.error('Erro ao consultar IA:', err);
+    }
+  };
+
+  const iaJoga = async (boardAtual) => {
+    const livres = boardAtual
+      .map((v, i) => (v === null ? i : null))
+      .filter(v => v !== null);
+
+    if (livres.length === 0 || gameOver) return;
+
+    const randomIndex = livres[Math.floor(Math.random() * livres.length)];
+    const newBoard = [...boardAtual];
+    newBoard[randomIndex] = 'O';
+    setBoard(newBoard);
+
+    const response = await fetch(`http://localhost:5001/prever${modelo}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(res => res.json())
-      .then(data => {
-        setIaAnswer(data.resultado);
-        if (data.resultado !== "Tem jogo" && data.resultado !== "Empate") {
-          setGameOver(true);
-        }
+      body: JSON.stringify({
+        tabuleiro: newBoard.map(v => v ? v.toLowerCase() : 'b')
       })
-      .catch(err => {
-        console.error("Erro ao chamar a IA:", err);
-        setIaAnswer("Erro ao consultar IA");
-      });
+    });
+
+    const data = await response.json();
+    const resultado = data.resultado;
+
+    if (resultado === 'Tem jogo') {
+      setIsXTurn(true);
+      setMessage('Seu turno!');
+    } else {
+      setMessage(resultado);
+      setGameOver(true);
+    }
   };
-  
 
+  const novoJogo = () => {
+    setBoard(initialBoard);
+    setIsXTurn(true);
+    setGameOver(false);
+    setMessage('Seu turno!');
+  };
 
-  useEffect(() => {
-    // sempre que o tabuleiro muda, consultar a IA
-    if (!gameOver) {
-      consultarIA(board);
-    }
-  }, [board, modeloIA]);
-  
-  useEffect(() => {
-    if (!isXTurn && iaAnswer === "Tem jogo" && !gameOver) {
-      const emptyIndices = board
-        .map((value, index) => value === null ? index : null)
-        .filter((v) => v !== null);
-  
-      if (emptyIndices.length > 0) {
-        const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-        const newBoard = [...board];
-        newBoard[randomIndex] = 'O';
-  
-        setTimeout(() => {
-          if (!gameOver) {
-            setBoard(newBoard);
-            setIsXTurn(true);
-          }
-        }, 500);
-      }
-    }
-  }, [isXTurn, iaAnswer, board, gameOver]);
-  
   return (
-    <>
-    <div style={{ marginBottom: '10px' }}>
-  <label htmlFor="modelo">Modelo IA:&nbsp;</label>
-  <select id="modelo" value={modeloIA} onChange={e => setModeloIA(e.target.value)}>
-    <option value="knn">KNN</option>
-    <option value="mlp">MLP</option>
-    <option value="dt">Decision Tree</option>
-    <option value="rf">Random Forest</option>
-    <option value="xgb">XGBoost</option>
-  </select>
-</div>
-
-      <h3>Tic Tac Toe</h3>
-      <IAAnswer iaAnswer={iaAnswer} />
-      <div className="board">
-        {board.map((value, index) => (
-          <Square key={index} value={value} onClick={() => handleClick(index)} index={index} />
-
-        ))}
-      </div>
-      <NewGame onClick={handleNewGame} />
-    </>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 30 }}>
+      <h1>Jogo da Velha com IA</h1>
+      <Dropdown modelo={modelo} setModelo={setModelo} />
+      <Board board={board} onClick={handleClick} />
+      <p>{message}</p>
+      <button onClick={novoJogo}>Novo Jogo</button>
+    </div>
   );
+  
 }
 
 export default App;
