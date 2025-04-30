@@ -39,6 +39,8 @@ modelo_xgb = joblib.load('modelo_xgb.pkl')
 
 modelo_rf = joblib.load('modelo_rf.pkl')
 
+modelo_dt = joblib.load('modelo_dt.pkl')
+
 
 
 
@@ -166,6 +168,28 @@ def prever_rf():
         response = jsonify({'erro': str(e)})
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response, 500
+    
+@app.route('/preverdt', methods=['POST'])
+def prever_dt():
+    try:
+        data = request.get_json()
+        tabuleiro = data.get('tabuleiro', [])
+        entrada = [symbol_map.get(v, 0) for v in tabuleiro]
+
+        entrada = np.array(entrada).reshape(1, -1)
+
+        pred = modelo_dt.predict(entrada)
+        label = str(pred[0])  # já retorna string ("Empate", etc.)
+
+        response = jsonify({'resultado': label})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+
+    except Exception as e:
+        response = jsonify({'erro': str(e)})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response, 500
+
 
 
 

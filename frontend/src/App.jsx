@@ -89,8 +89,11 @@ function App() {
   <select id="modelo" value={modeloIA} onChange={e => setModeloIA(e.target.value)}>
     <option value="knn">KNN</option>
     <option value="mlp">MLP</option>
-    <option value="xgb">XGBoost</option>
+    <option value="dt">Decision Tree</option>
     <option value="rf">Random Forest</option>
+    <option value="xgb">XGBoost</option>
+    
+
   </select>
 </div>
 
