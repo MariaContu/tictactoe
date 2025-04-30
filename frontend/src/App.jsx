@@ -45,7 +45,7 @@ function App() {
       .then(res => res.json())
       .then(data => {
         setIaAnswer(data.resultado);
-        if (data.resultado !== "Tem jogo") {
+        if (data.resultado !== "Tem jogo" && data.resultado !== "Empate") {
           setGameOver(true);
         }
       })
@@ -58,30 +58,33 @@ function App() {
 
 
   useEffect(() => {
-    if (gameOver) return;
-
-    // Sempre que o tabuleiro mudar, consultar a IA
-    consultarIA(board);
-
-    // Se for a vez da IA (O), jogar
-    if (!isXTurn && !gameOver) {
+    // sempre que o tabuleiro muda, consultar a IA
+    if (!gameOver) {
+      consultarIA(board);
+    }
+  }, [board, modeloIA]);
+  
+  useEffect(() => {
+    if (!isXTurn && iaAnswer === "Tem jogo" && !gameOver) {
       const emptyIndices = board
         .map((value, index) => value === null ? index : null)
         .filter((v) => v !== null);
-
-      if (emptyIndices.length > 0 ) {
+  
+      if (emptyIndices.length > 0) {
         const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         const newBoard = [...board];
         newBoard[randomIndex] = 'O';
-
+  
         setTimeout(() => {
-          setBoard(newBoard);
-          setIsXTurn(true);
+          if (!gameOver) {
+            setBoard(newBoard);
+            setIsXTurn(true);
+          }
         }, 500);
       }
     }
-  }, [board, isXTurn, gameOver, modeloIA]);
-
+  }, [isXTurn, iaAnswer, board, gameOver]);
+  
   return (
     <>
     <div style={{ marginBottom: '10px' }}>
@@ -92,8 +95,6 @@ function App() {
     <option value="dt">Decision Tree</option>
     <option value="rf">Random Forest</option>
     <option value="xgb">XGBoost</option>
-    
-
   </select>
 </div>
 
