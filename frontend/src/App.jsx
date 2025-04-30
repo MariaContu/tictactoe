@@ -36,20 +36,47 @@ function App() {
       const emptyIndices = board
         .map((value, index) => value === null ? index : null)
         .filter((v) => v !== null);
-
+  
       if (emptyIndices.length > 0) {
         const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         const newBoard = [...board];
         newBoard[randomIndex] = 'O';
-        setTimeout(() => { 
+  
+        setTimeout(() => {
           setBoard(newBoard);
           setIsXTurn(true);
+  
+          // Chamada para a IA Flask
+          const payload = {
+            tabuleiro: newBoard.map(v => v ? v.toLowerCase() : 'b') // 'X' -> 'x', null -> 'b'
+          };
+  
+          fetch('http://localhost:5001/preverknn', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
 
-          setIaAnswer('Tem jogo');
+
+            .then(res => res.json())
+            .then(data => {
+              setIaAnswer(data.resultado);
+              if (data.resultado !== "Tem jogo") {
+                setGameOver(true);
+              }
+            })
+            .catch(err => {
+              console.error("Erro ao chamar a IA:", err);
+              setIaAnswer("Erro ao consultar IA");
+            });
+  
         }, 500);
       }
     }
   }, [isXTurn, board, gameOver]);
+  
 
   return (
     <>
